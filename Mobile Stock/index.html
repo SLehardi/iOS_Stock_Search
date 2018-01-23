@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="stockModule">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Stock Search</title>
+                <meta name="description" content="Stock Information">
+                    <meta name="author" content="Sam Lehardi">
+                        
+                        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+                        <!-- HighCharts -->
+                        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+                        <script src="https://code.highcharts.com/modules/exporting.js"></script>
+                        
+                       
+                            <script type="text/javascript">
+                            var jsonData;
+                            var jsonPrice;  var jsonSMA; var jsonEMA; var jsonSTOCH; var jsonRSI;
+                            var jsonADX; var jsonCCI; var jsonBBANDS; var jsonMACD;
+                            var urlPrice; var urlSMA; var urlEMA;
+                            var urlSTOCH; var urlRSI; var urlADX;
+                            var urlCCI; var urlBBANDS; var urlMACD;
+                            var urlFB;
+                            function changeFormat(date) {
+                            var r = date.match(/^\s*([0-9]+)\s*-\s*([0-9]+)\s*-\s*([0-9]+)(.*)$/);
+                            return r[2]+"/"+r[3];
+                            }
+                            
+                            
+                            function changePrice(divElement){
+                            var priceJson=jsonPrice.price;
+                            var priceDate=[];var priceArr=[];var priceVol=[];var countP=0;
+                            for(var date in priceJson["Time Series (Daily)"]){
+                            var dateNew=changeFormat(date);
+                            priceDate.push(dateNew);
+                            var price=parseFloat(priceJson["Time Series (Daily)"][date]["4. close"]);
+                            var volume=parseFloat(priceJson["Time Series (Daily)"][date]["5. volume"]);
+                            priceArr.push(price);
+                            priceVol.push(volume);
+                            countP ++;
+                            if(countP>129){
+                            priceArr.reverse();
+                            priceDate.reverse();
+                            priceVol.reverse();
+                            break;
+                            }
+                            }
+                            Highcharts.chart(divElement, {
+                            chart: {
+                            plotBackgroundColor: '#FFFFFF',
+                            type: 'column',
+                            zoomType:'x'
+                            },
+                            title: {
+                            text: priceJson['Meta Data']['2. Symbol']+' Stock Price and Volume'
+                            },
+                            subtitle: {
+                            text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                            style: {
+                                color: '#0000ff',
+                            }
+                            },
+                            xAxis: {
+                                categories:priceDate,
+                                tickInterval:5
+                            },
+                            yAxis: [{
+                                    title: {
+                                    text: 'Stock Price'
+                                    },
+                                    labels: {
+                                    format: '{value}'
+                                    },
+                                    maxPadding: 0.05,
+                                    minPadding:0.20,
+                                    },
+                                    {
+                                    floor: 0,
+                                    title: {
+                                    text: 'Volume'
+                                    },
+                                    labels: {
+                                    formatter: function () {
+                                    return this.value / 1000000 + 'M';
+                                    }
+                                    },
+                                    opposite: true,
+                                    maxPadding: 3.0
+                                    }],
+                                    legend: {
+                                        
+                                    },
+                            plotOptions: {
+                                column: {
+                                    pointWidth: .5,
+                                    pointPadding: 10
+                                    
+                                },
+                                area: {
+                                    lineWidth: .8,
+                                    fillOpacity: 0.5,
+                                    marker: {
+                                        enabled: false,
+                                        symbol: 'circle',
+                                        radius: 2,
+                                        states: {
+                                            hover: {
+                                                enabled: true
+                                            }
+                                        }
+                                    },
+                                    threshold: null
+                                }
+                            },
+                            series: [{
+                                     type: 'area',
+                                     name: priceJson['Meta Data']['2. Symbol'],
+                                     data: priceArr,
+                                     color: '#0000ff'
+                                     },
+                                     {
+                                     type: 'column',
+                                     name: priceJson['Meta Data']['2. Symbol']+" Volume",
+                                     yAxis: 1,
+                                     data: priceVol,
+                                     color: '#ff0000'
+                                     }]
+                                     });
+                                     
+                                     var exportUrl = 'http://export.highcharts.com/';
+                                     var optionsStr = JSON.stringify({
+                                                                     chart: {
+                                                                     type: 'column',
+                                                                     zoomType:'x'
+                                                                     },
+                                                                     title: {
+                                                                     text: priceJson['Meta Data']['2. Symbol']+' Stock Price and Volume'
+                                                                     },
+                                                                     subtitle: {
+                                                                     text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                     style: {
+                                                                     color: '#0000ff',
+                                                                     }
+                                                                     },
+                                                                     xAxis: {
+                                                                     categories:priceDate,
+                                                                     tickInterval:5
+                                                                     },
+                                                                     yAxis: [{
+                                                                             title: {
+                                                                             text: 'Stock Price'
+                                                                             },
+                                                                             labels: {
+                                                                             format: '{value}'
+                                                                             },
+                                                                             maxPadding: 0.05,
+                                                                             minPadding:0.20,
+                                                                             },
+                                                                             {
+                                                                             floor: 0,
+                                                                             title: {
+                                                                             text: 'Volume'
+                                                                             },
+                                                                             labels: {
+                                                                             formatter: function () {
+                                                                             return this.value / 1000000 + 'M';
+                                                                             }
+                                                                             },
+                                                                             opposite: true,
+                                                                             maxPadding: 3.0
+                                                                             }],
+                                                                     legend: {
+                                                                     
+                                                                     },
+                                                                     plotOptions: {
+                                                                     column: {
+                                                                     pointWidth: .5,
+                                                                     pointPadding: 10
+                                                                     
+                                                                     },
+                                                                     area: {
+                                                                     lineWidth: .8,
+                                                                     fillOpacity: 0.5,
+                                                                     marker: {
+                                                                     enabled: false,
+                                                                     symbol: 'circle',
+                                                                     radius: 2,
+                                                                     states: {
+                                                                     hover: {
+                                                                     enabled: true
+                                                                     }
+                                                                     }
+                                                                     },
+                                                                     threshold: null
+                                                                     }
+                                                                     },
+                                                                     series: [{
+                                                                              type: 'area',
+                                                                              name: priceJson['Meta Data']['2. Symbol'],
+                                                                              data: priceArr,
+                                                                              color: '#0000ff'
+                                                                              },
+                                                                              {
+                                                                              type: 'column',
+                                                                              name: priceJson['Meta Data']['2. Symbol']+" Volume",
+                                                                              yAxis: 1,
+                                                                              data: priceVol,
+                                                                              color: '#ff0000'
+                                                                              }]
+                                                                     
+                                                                     }),
+                                                                     dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                     
+                                                                     if (window.XDomainRequest) {
+                                                                         var xdr = new XDomainRequest();
+                                                                         xdr.open("post", exportUrl+ '?' + dataString);
+                                                                         xdr.onload = function () {
+                                                                             
+                                                                             $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                         };
+                                                                         xdr.send();
+                                                                     } else {
+                                                                         $.ajax({
+                                                                                type: 'POST',
+                                                                                data: dataString,
+                                                                                url: exportUrl,
+                                                                                success: function (data) {
+                                                                                
+                                                                                $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                
+                                                                                urlPrice=exportUrl+data;
+                                                                                urlFB=urlPrice;
+                                                                                },
+                                                                                error: function (err) {
+                                                                                debugger;
+                                                                                console.log('error', err.statusText)
+                                                                                }
+                                                                                });
+                                                                     }
+                                                                     return urlPrice
+                            }
+                            function changeSMA(divElement) {
+                                var data=jsonSMA.SMA;
+                                var smaDate=[];
+                                var smaArr=[];
+                                var count=0;
+                                for(var date in data["Technical Analysis: SMA"]){
+                                    dateNew=changeFormat(date);
+                                    smaDate.push(dateNew);
+                                    var sma=parseFloat(data["Technical Analysis: SMA"][date]["SMA"]);
+                                    smaArr.push(sma);
+                                    count ++;
+                                    if(count>129){
+                                        smaArr.reverse();
+                                        smaDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Simple Moving Average (SMA)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'SMA'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: smaDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 2,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol'],
+                                                          data: smaArr,
+                                                          
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Simple Moving Average (SMA)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'SMA'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: smaDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 2,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol'],
+                                                                                          data: smaArr,
+                                                                                          
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlSMA=exportUrl+data;
+                                                                                            urlFB=urlSMA;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeEMA(divElement) {
+                                var data=jsonEMA.EMA;
+                                var emaDate=[];
+                                var emaArr=[];
+                                
+                                var count=0;
+                                for(var date in data["Technical Analysis: EMA"]){
+                                    dateNew=changeFormat(date);
+                                    emaDate.push(dateNew);
+                                    var ema=parseFloat(data["Technical Analysis: EMA"][date]["EMA"]);
+                                    emaArr.push(ema);
+                                    count ++;
+                                    if(count>129){
+                                        emaArr.reverse();
+                                        emaDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Exponential Moving Average (EMA)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'EMA'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: emaDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 2,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol'],
+                                                          data: emaArr,
+                                                          
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Exponential Moving Average (EMA)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'EMA'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: emaDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 2,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol'],
+                                                                                          data: emaArr,
+                                                                                          
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlEMA=exportUrl+data;
+                                                                                            urlFB=urlEMA;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeSTOCH(divElement) {
+                                var data=jsonSTOCH.STOCH;
+                                var stochDate=[];
+                                var stochSK=[];
+                                var stochSD=[];
+                                var count=0;
+                                for(var date in data["Technical Analysis: STOCH"]){
+                                    dateNew=changeFormat(date);
+                                    stochDate.push(dateNew);
+                                    var stoch=parseFloat(data["Technical Analysis: STOCH"][date]["SlowK"]);
+                                    stochSK.push(stoch);
+                                    var stoch1=parseFloat(data["Technical Analysis: STOCH"][date]["SlowD"]);
+                                    stochSD.push(stoch1);
+                                    count ++;
+                                    if(count>129){
+                                        stochSK.reverse();
+                                        stochSD.reverse();
+                                        stochDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Stochastic Oscillator (STOCH)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'STOCH'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: stochDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 2,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol']+ ' SlowK',
+                                                          data: stochSK,
+                                                          
+                                                          },
+                                                          {
+                                                          color: '#90b4db',
+                                                          name: data['Meta Data']['1: Symbol']+ ' SlowD',
+                                                          data: stochSD,
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Stochastic Oscillator (STOCH)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'STOCH'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: stochDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 2,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol']+ ' SlowK',
+                                                                                          data: stochSK,
+                                                                                          
+                                                                                          },
+                                                                                          {
+                                                                                          color: '#90b4db',
+                                                                                          name: data['Meta Data']['1: Symbol']+ ' SlowD',
+                                                                                          data: stochSD,
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlSTOCH=exportUrl+data;
+                                                                                            urlFB=urlSTOCH;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeRSI(divElement) {
+                                var data=jsonRSI.RSI;
+                                var rsiDate=[];
+                                var rsiArr=[];
+                                
+                                var count=0;
+                                for(var date in data["Technical Analysis: RSI"]){
+                                    dateNew=changeFormat(date);
+                                    rsiDate.push(dateNew);
+                                    var rsi=parseFloat(data["Technical Analysis: RSI"][date]["RSI"]);
+                                    rsiArr.push(rsi);
+                                    count ++;
+                                    if(count>129){
+                                        rsiArr.reverse();
+                                        rsiDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Relative Strength Index (RSI)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'RSI'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: rsiDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 2,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol'],
+                                                          data: rsiArr,
+                                                          
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Relative Strength Index (RSI)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'RSI'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: rsiDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 2,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol'],
+                                                                                          data: rsiArr,
+                                                                                          
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlRSI=exportUrl+data;
+                                                                                            urlFB=urlRSI;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeADX(divElement) {
+                                var data=jsonADX.ADX;
+                                var adxDate=[];
+                                var adxArr=[];
+                                
+                                var count=0;
+                                for(var date in data["Technical Analysis: ADX"]){
+                                    dateNew=changeFormat(date);
+                                    adxDate.push(dateNew);
+                                    var adx=parseFloat(data["Technical Analysis: ADX"][date]["ADX"]);
+                                    adxArr.push(adx);
+                                    count ++;
+                                    if(count>129){
+                                        adxArr.reverse();
+                                        adxDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Average Directional Movement Index (ADX)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'ADX'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: adxDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 2,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol'],
+                                                          data: adxArr,
+                                                          
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Average Directional Movement Index (ADX)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'ADX'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: adxDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 2,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol'],
+                                                                                          data: adxArr,
+                                                                                          
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlADX=exportUrl+data;
+                                                                                            urlFB=urlADX;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeCCI(divElement) {
+                                var data=jsonCCI.CCI;
+                                var cciDate=[];
+                                var cciArr=[];
+                                
+                                var count=0;
+                                for(var date in data["Technical Analysis: CCI"]){
+                                    dateNew=changeFormat(date);
+                                    cciDate.push(dateNew);
+                                    var cci=parseFloat(data["Technical Analysis: CCI"][date]["CCI"]);
+                                    cciArr.push(cci);
+                                    count ++;
+                                    if(count>129){
+                                        cciArr.reverse();
+                                        cciDate.reverse();
+                                        break;
+                                    }
+                                }
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Commodity Channel Index (CCI)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'CCI'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: cciDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 2,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol'],
+                                                          data: cciArr,
+                                                          
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Commodity Channel Index (CCI)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'CCI'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: cciDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 2,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol'],
+                                                                                          data: cciArr,
+                                                                                          
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlCCI=exportUrl+data;
+                                                                                            urlFB=urlCCI;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeBBANDS(divElement) {
+                                var data=jsonBBANDS.BBANDS;
+                                
+                                var bbandsDate=[];
+                                var bbandsL=[];
+                                var bbandsM=[];
+                                var bbandsU=[];
+                                var count=0;
+                                for(var date in data["Technical Analysis: BBANDS"]){
+                                    dateNew=changeFormat(date);
+                                    bbandsDate.push(dateNew);
+                                    var bbands=parseFloat(data["Technical Analysis: BBANDS"][date]["Real Lower Band"]);
+                                    bbandsL.push(bbands);
+                                    var bbands1=parseFloat(data["Technical Analysis: BBANDS"][date]["Real Middle Band"]);
+                                    bbandsM.push(bbands1);
+                                    var bbands2=parseFloat(data["Technical Analysis: BBANDS"][date]["Real Upper Band"]);
+                                    bbandsU.push(bbands2);
+                                    count ++;
+                                    
+                                    if(count>129){
+                                        bbandsL.reverse();
+                                        bbandsM.reverse();
+                                        bbandsU.reverse();
+                                        bbandsDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Bollinger Bands (BBANDS)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'BBANDS'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: bbandsDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 1.5,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol']+ ' Real Middle Band',
+                                                          data: bbandsM,
+                                                          
+                                                          },
+                                                          {
+                                                          color: '#000000',
+                                                          name: data['Meta Data']['1: Symbol']+ ' Real Upper Band',
+                                                          data: bbandsU,
+                                                          },
+                                                          {
+                                                          color: '#55ed67',
+                                                          name: data['Meta Data']['1: Symbol']+ ' Real Lower Band',
+                                                          data: bbandsL,
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Bollinger Bands (BBANDS)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'BBANDS'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: bbandsDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 1.5,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol']+ ' Real Middle Band',
+                                                                                          data: bbandsM,
+                                                                                          
+                                                                                          },
+                                                                                          {
+                                                                                          color: '#000000',
+                                                                                          name: data['Meta Data']['1: Symbol']+ ' Real Upper Band',
+                                                                                          data: bbandsU,
+                                                                                          },
+                                                                                          {
+                                                                                          color: '#55ed67',
+                                                                                          name: data['Meta Data']['1: Symbol']+ ' Real Lower Band',
+                                                                                          data: bbandsL,
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlBBANDS=exportUrl+data;
+                                                                                            urlFB=urlBBANDS;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeMACD(divElement) {
+                                var data=jsonMACD.MACD;
+                                var macdDate=[];
+                                var macd=[];
+                                var macdHist=[];
+                                var macdSig=[];
+                                var count=0;
+                                for(var date in data["Technical Analysis: MACD"]){
+                                    dateNew=changeFormat(date);
+                                    macdDate.push(dateNew);
+                                    var macd1=parseFloat(data["Technical Analysis: MACD"][date]["MACD"]);
+                                    macd.push(macd1);
+                                    var macd2=parseFloat(data["Technical Analysis: MACD"][date]["MACD_Hist"]);
+                                    macdHist.push(macd2);
+                                    var macd3=parseFloat(data["Technical Analysis: MACD"][date]["MACD_Signal"]);
+                                    macdSig.push(macd3);
+                                    count ++;
+                                    
+                                    if(count>129){
+                                        macd.reverse();
+                                        macdHist.reverse();
+                                        macdSig.reverse();
+                                        macdDate.reverse();
+                                        break;
+                                    }
+                                }
+                                
+                                Highcharts.chart(divElement, {
+                                                 chart: {
+                                                 type: 'line',
+                                                 zoomType: 'x'
+                                                 },
+                                                 title: {
+                                                 text: 'Moving Average Convergence/Divergence (MACD)'
+                                                 },
+                                                 subtitle: {
+                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                 style: {
+                                                 color: '#0000ff',
+                                                 }
+                                                 },
+                                                 yAxis: {
+                                                 title: {
+                                                 text: 'MACD'
+                                                 }
+                                                 },
+                                                 xAxis: {
+                                                 categories: macdDate,
+                                                 tickInterval: 5
+                                                 },
+                                                 legend: {
+                                                 
+                                                 },
+                                                 plotOptions: {
+                                                 series: {
+                                                 lineWidth: 1,
+                                                 marker: {
+                                                 radius: 1.5,
+                                                 symbol: 'square'
+                                                 }
+                                                 }
+                                                 },
+                                                 series: [{
+                                                          color: '#FF0000',
+                                                          name: data['Meta Data']['1: Symbol'] + ' MACD',
+                                                          data: macd,
+                                                          
+                                                          },
+                                                          {
+                                                          color: '#ffa632',
+                                                          name: data['Meta Data']['1: Symbol'] + ' MACD_Hist',
+                                                          data: macdHist,
+                                                          },
+                                                          {
+                                                          color: '#7b66d6',
+                                                          name: data['Meta Data']['1: Symbol'] + ' MACD_Signal',
+                                                          data: macdSig,
+                                                          }],
+                                                 responsive: {
+                                                 rules: [{
+                                                         condition: {
+                                                         maxWidth: 500
+                                                         },
+                                                         chartOptions: {
+                                                         legend: {
+                                                         
+                                                         }
+                                                         }
+                                                         }]
+                                                 }
+                                                 
+                                                 });
+                                                 var exportUrl = 'http://export.highcharts.com/';
+                                                 var optionsStr = JSON.stringify({
+                                                                                 chart: {
+                                                                                 type: 'line',
+                                                                                 zoomType: 'x'
+                                                                                 },
+                                                                                 title: {
+                                                                                 text: 'Moving Average Convergence/Divergence (MACD)'
+                                                                                 },
+                                                                                 subtitle: {
+                                                                                 text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                                                 style: {
+                                                                                 color: '#0000ff',
+                                                                                 }
+                                                                                 },
+                                                                                 yAxis: {
+                                                                                 title: {
+                                                                                 text: 'MACD'
+                                                                                 }
+                                                                                 },
+                                                                                 xAxis: {
+                                                                                 categories: macdDate,
+                                                                                 tickInterval: 5
+                                                                                 },
+                                                                                 legend: {
+                                                                                 
+                                                                                 },
+                                                                                 plotOptions: {
+                                                                                 series: {
+                                                                                 lineWidth: 1,
+                                                                                 marker: {
+                                                                                 radius: 1.5,
+                                                                                 symbol: 'square'
+                                                                                 }
+                                                                                 }
+                                                                                 },
+                                                                                 series: [{
+                                                                                          color: '#FF0000',
+                                                                                          name: data['Meta Data']['1: Symbol'] + ' MACD',
+                                                                                          data: macd,
+                                                                                          
+                                                                                          },
+                                                                                          {
+                                                                                          color: '#ffa632',
+                                                                                          name: data['Meta Data']['1: Symbol'] + ' MACD_Hist',
+                                                                                          data: macdHist,
+                                                                                          },
+                                                                                          {
+                                                                                          color: '#7b66d6',
+                                                                                          name: data['Meta Data']['1: Symbol'] + ' MACD_Signal',
+                                                                                          data: macdSig,
+                                                                                          }],
+                                                                                 responsive: {
+                                                                                 rules: [{
+                                                                                         condition: {
+                                                                                         maxWidth: 500
+                                                                                         },
+                                                                                         chartOptions: {
+                                                                                         legend: {
+                                                                                         
+                                                                                         }
+                                                                                         }
+                                                                                         }]
+                                                                                 }
+                                                                                 }),
+                                                                                 dataString = encodeURI('async=true&type=jpeg&width=400&options=' + optionsStr);
+                                                                                 
+                                                                                 if (window.XDomainRequest) {
+                                                                                     var xdr = new XDomainRequest();
+                                                                                     xdr.open("post", exportUrl+ '?' + dataString);
+                                                                                     xdr.onload = function () {
+                                                                                         
+                                                                                         $('#container').html('<img src="' + exporturl + xdr.responseText + '"/>');
+                                                                                     };
+                                                                                     xdr.send();
+                                                                                 } else {
+                                                                                     $.ajax({
+                                                                                            type: 'POST',
+                                                                                            data: dataString,
+                                                                                            url: exportUrl,
+                                                                                            success: function (data) {
+                                                                                            
+                                                                                            $('#container').html('<img src="' + exportUrl + data + '"/>');
+                                                                                            
+                                                                                            urlMACD=exportUrl+data;
+                                                                                            urlFB=urlMACD;
+                                                                                            },
+                                                                                            error: function (err) {
+                                                                                            debugger;
+                                                                                            console.log('error', err.statusText)
+                                                                                            }
+                                                                                            });
+                                                                                 }
+                            }
+                            function changeHistoric(divElement){
+                                var priceJson=jsonPrice.price;
+                                var priceDate=[];var priceArr=[];var dataArr=[];var countP=0;
+                                var symbol=priceJson["Meta Data"]["2. Symbol"]
+                                for(var date in priceJson["Time Series (Daily)"]){
+                                    var dateNew=new Date(date).getTime();
+                                    var price=parseFloat(priceJson["Time Series (Daily)"][date]["4. close"]);
+                                    dataArr.push([dateNew,price]);
+                                    countP ++;
+                                    if(countP>999){
+                                        dataArr.reverse();
+                                        break;
+                                    }
+                                }
+                                Highcharts.stockChart(divElement, {
+                                                      chart: {
+                                                      
+                                                      },
+                                                      
+                                                      title: {
+                                                      text: symbol+' Stock Value'
+                                                      },
+                                                      
+                                                      subtitle: {
+                                                      text: ' <a href="https://www.alphavantage.co/">Source: Alpha Vantage</a>',
+                                                      style: {
+                                                      color: '#0000ff',
+                                                      }
+                                                      },
+                                                      yAxis: {
+                                                      title: {
+                                                      text: 'Stock Value'
+                                                      }
+                                                      },
+                                                      
+                                                      
+                                                      rangeSelector: {
+                                                      buttons: [ {
+                                                                type: 'month',
+                                                                count: 1,
+                                                                text: '1m'
+                                                                }, {
+                                                                type: 'month',
+                                                                count: 3,
+                                                                text: '3m'
+                                                                }, {
+                                                                type: 'month',
+                                                                count: 6,
+                                                                text: '6m'
+                                                                },{
+                                                                type: 'year',
+                                                                count: 1,
+                                                                text: '1y'
+                                                                },{
+                                                                type: 'all',
+                                                                text: 'All'
+                                                                }],
+                                                      selected: 0
+                                                      },
+                                                      
+                                                      series: [{
+                                                               name: 'Stock Value',
+                                                               data: dataArr,
+                                                               type: 'area',
+                                                               threshold: null,
+                                                               tooltip: {
+                                                               valueDecimals: 2
+                                                               }
+                                                               }],
+                                                      
+                                                      
+                                                      });
+                            }
+                            function getPrice(symbol){
+                                
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=price&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonPrice=data;
+                                       
+                                       if(data.price==null||data.price["Meta Data"]==null){
+                                       
+                                       console.log("error1");
+                                       return "error1";
+                                       }
+                                       if(data.intra==null||data.intra["Meta Data"]==null){
+                                       console.log("error2");
+                                       return "error2";
+                                       }
+                                       changePrice(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       console.log("error3");
+                                       return "error3";
+                                       },
+                                       })
+                            }
+                            function getHistoric(symbol){
+                                
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=price&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonPrice=data;
+                                       
+                                       if(data.price==null||data.price["Meta Data"]==null){
+                                       
+                                       console.log("error1");
+                                       return "error1";
+                                       }
+                                       if(data.intra==null||data.intra["Meta Data"]==null){
+                                       console.log("error2");
+                                       return "error2";
+                                       }
+                                       //changePrice(container);
+                                       changeHistoric(chartContainer);
+                                       
+                                       },
+                                       error: function(jqXHR) {
+                                       console.log("error3");
+                                       return "error3";
+                                       },
+                                       })
+                            }
+                            function getSMA(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=SMA&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonSMA=data;
+                                       if(data.SMA==null||data.SMA["Meta Data"]==null){
+                                       
+                                       }
+                                       $("#barhc2").hide();
+                                       changeSMA(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       },
+                                       })
+                            }
+                            function getEMA(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=EMA&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonEMA=data;
+                                       
+                                       
+                                       if(data.EMA==null||data.EMA["Meta Data"]==null){
+                                       $("#barhc3").hide();
+                                       $("#alerthc3").show();
+                                       }
+                                       $("#barhc3").hide();
+                                       changeEMA(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       $("#alerthc3").show();
+                                       //alert("Error: " + jqXHR.status+" EMA Error");
+                                       $("#barhc3").hide();
+                                       },
+                                       })
+                            }
+                            function getSTOCH(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=STOCH&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonSTOCH=data;
+                                       if(data.STOCH==null||data.STOCH["Meta Data"]==null){
+                                       $("#barhc4").hide();
+                                       $("#alerthc4").show();
+                                       }
+                                       $("#barhc4").hide();
+                                       changeSTOCH(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       $("#alerthc4").show();
+                                       //alert("Error: " + jqXHR.status+" STOCH Error");
+                                       $("#barhc4").hide();
+                                       },
+                                       })
+                            }
+                            function getRSI(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=RSI&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonRSI=data;
+                                       
+                                       if(data.RSI==null||data.RSI["Meta Data"]==null){
+                                       $("#barhc5").hide();
+                                       $("#alerthc5").show();
+                                       }
+                                       $("#barhc5").hide();
+                                       changeRSI(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       $("#alerthc5").show();
+                                       //alert("Error: " + jqXHR.status+" RSI Error");
+                                       $("#barhc5").hide();
+                                       },
+                                       })
+                            }
+                            function getADX(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=ADX&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonADX=data;
+                                       if(data.ADX==null||data.ADX["Meta Data"]==null){
+                                       $("#barhc6").hide();
+                                       $("#alerthc6").show();
+                                       }
+                                       $("#barhc6").hide();
+                                       changeADX(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       $("#alerthc6").show();
+                                       //alert("Error: " + jqXHR.status+" ADX Error");
+                                       $("#barhc6").hide();
+                                       },
+                                       })
+                            }
+                            function getCCI(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=CCI&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonCCI=data;
+                                       if(data.CCI==null||data.CCI["Meta Data"]==null){
+                                       $("#barhc7").hide();
+                                       $("#alerthc7").show();
+                                       }
+                                       $("#barhc7").hide();
+                                       changeCCI(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       $("#alerthc7").show();
+                                       //  alert("Error: " + jqXHR.status+" CCI Error");
+                                       $("#barhc7").hide();
+                                       },
+                                       })
+                            }
+                            function getBBANDS(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=BBANDS&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonBBANDS=data;
+                                       if(data.BBANDS["Meta Data"]==null){
+                                       $("#barhc8").hide();
+                                       $("#alerthc8").show();
+                                       }
+                                       $("#barhc8").hide();
+                                       changeBBANDS(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       $("#alerthc8").show();
+                                       //alert("Error: " + jqXHR.status+" BBANDS Error");
+                                       $("#barhc8").hide();
+                                       },
+                                       })
+                            }
+                            function getMACD(symbol){
+                                $.ajax({
+                                       type: "GET",
+                                       url: "http://lehardistock.us-east-2.elasticbeanstalk.com/stocksearch.php?type=MACD&symbol="+ symbol,
+                                       dataType: "json",
+                                       success: function(data) {
+                                       jsonMACD=data;
+                                       if(data.MACD["Meta Data"]==null){
+                                       return false;
+                                       }
+                                       $("#barhc9").hide();
+                                       changeMACD(chartContainer);
+                                       },
+                                       error: function(jqXHR) {
+                                       return false;
+                                       },
+                                       })
+                            }
+                            function chartPicker(symbol,type) {
+                                if(type=="historic"){
+                                    getHistoric(symbol);
+                                } else if (type=="Price"){
+                                    getPrice(symbol);
+                                } else if (type=="SMA"){
+                                    getSMA(symbol);
+                                } else if (type=="EMA"){
+                                    getEMA(symbol);
+                                } else if (type=="STOCH"){
+                                    getSTOCH(symbol);
+                                } else if (type=="RSI"){
+                                    getRSI(symbol);
+                                } else if (type=="ADX"){
+                                    getADX(symbol);
+                                } else if (type=="CCI"){
+                                    getCCI(symbol);
+                                } else if (type=="BBANDS"){
+                                    getBBANDS(symbol);
+                                } else if (type=="MACD"){
+                                    getMACD(symbol);
+                                } else {
+                                    getPrice(symbol);
+                                }
+                                
+                            }
+                            
+                            function getURL() {
+                                return urlFB;
+                            }
+                            
+                            $(document).ready(function() {
+                               
+                            })
+                                              
+                            </script>
+                        
+                        </head>
+    
+    <body>
+        <div id="chartContainer"></div>
+    </body>
+    
+</html>
+
